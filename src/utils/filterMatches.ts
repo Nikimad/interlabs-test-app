@@ -20,6 +20,15 @@ export function filterMatches(matches: Match[], filter: MatchFilter): Match[] {
   return matches.filter((m) => statuses.includes(m.status));
 }
 
+// Поиск по названию хозяев или гостей, без учёта регистра.
+export function searchMatches(matches: Match[], query: string): Match[] {
+  const q = query.trim().toLowerCase();
+  if (q === '') return matches;
+  return matches.filter(
+    (m) => m.home.name.toLowerCase().includes(q) || m.away.name.toLowerCase().includes(q),
+  );
+}
+
 // sort стабилен — остальной порядок сохраняется.
 function liveFirst(matches: Match[]): Match[] {
   const isLive = (m: Match) => Number(m.status === 'live');

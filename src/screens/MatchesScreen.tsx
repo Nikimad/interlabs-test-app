@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { FilterTabs } from '../components/FilterTabs';
 import { MatchCard } from '../components/MatchCard';
 import { UpdatedAgo } from '../components/UpdatedAgo';
@@ -7,7 +15,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { useMatches } from '../hooks/useMatches';
 import { colors, contentMaxWidth, radius, spacing } from '../theme';
 import type { Match } from '../types/match';
-import { filterMatches, type MatchFilter } from '../utils/filterMatches';
+import { filterMatches, searchMatches, type MatchFilter } from '../utils/filterMatches';
 
 export function MatchesScreen() {
   const { state, reload } = useMatches();
@@ -63,13 +71,28 @@ type MatchListProps = {
 
 function MatchList({ matches, filter, onFilterChange }: MatchListProps) {
   const { favorites, isFavorite, toggle } = useFavorites();
-  const visible = filterMatches(matches, filter);
+  const [query, setQuery] = useState('');
+  const visible = searchMatches(filterMatches(matches, filter), query);
   const emptyText =
-    matches.length === 0 ? 'В этом туре пока нет матчей' : 'Нет матчей по выбранному фильтру';
+    matches.length === 0
+      ? 'В этом туре пока нет матчей'
+      : query.trim() !== ''
+        ? `Ничего не найдено по запросу «${query.trim()}»`
+        : 'Нет матчей по выбранному фильтру';
 
   return (
     <>
       <FilterTabs value={filter} onChange={onFilterChange} />
+      <TextInput
+        style={styles.search}
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Поиск по команде"
+        placeholderTextColor={colors.muted}
+        accessibilityLabel="Поиск по команде"
+        autoCorrect={false}
+        clearButtonMode="while-editing"
+      />
       <FlatList
         data={visible}
         keyExtractor={(m) => m.id}
@@ -119,6 +142,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing,
+  },
+  search: {
+    paddingHorizontal: spacing,
+    paddingVertical: 8,
+    marginBottom: spacing,
+    borderRadius: radius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    fontSize: 16,
   },
   refreshError: {
     color: colors.live,
