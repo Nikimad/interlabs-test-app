@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: contentMaxWidth,
     alignSelf: 'center',
-    padding: 16,
+    padding: spacing,
   },
   title: {
     color: colors.text,
@@ -163,6 +163,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: radius,
+    borderWidth: 1,
+    borderColor: colors.accent,
     backgroundColor: colors.accent,
   },
   buttonDisabled: {
@@ -170,6 +172,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.onAccent,
+    fontSize: 13,
     fontWeight: '600',
   },
 });
