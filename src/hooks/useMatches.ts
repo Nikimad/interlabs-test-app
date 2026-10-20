@@ -6,21 +6,38 @@ import type { Match } from '../types/match';
 export type MatchesState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; matches: Match[] };
+  | {
+      kind: 'ready';
+      matches: Match[];
+      updatedAt: Date;
+      refreshing: boolean;
+      refreshError: string | null;
+    };
 
 // Загрузка матчей с MATCHES_URL. Ответы устаревших запросов игнорируются.
+// Повторная загрузка при готовом списке не скрывает его, а ошибка не затирает.
 export function useMatches() {
   const [state, setState] = useState<MatchesState>({ kind: 'loading' });
   const requestId = useRef(0);
 
   const load = useCallback(async () => {
     const id = ++requestId.current;
-    setState({ kind: 'loading' });
+    setState((prev) =>
+      prev.kind === 'ready' ? { ...prev, refreshing: true, refreshError: null } : { kind: 'loading' },
+    );
     try {
       const res = await fetch(MATCHES_URL);
       if (!res.ok) throw new Error(`Ошибка сервера: ${res.status}`);
       const matches = parseMatches(await res.json());
-      if (id === requestId.current) setState({ kind: 'ready', matches });
+      if (id === requestId.current) {
+        setState({
+          kind: 'ready',
+          matches,
+          updatedAt: new Date(),
+          refreshing: false,
+          refreshError: null,
+        });
+      }
     } catch (e) {
       if (id !== requestId.current) return;
       const message =
@@ -31,7 +48,11 @@ export function useMatches() {
             : e instanceof Error
               ? e.message
               : 'Не удалось загрузить матчи';
-      setState({ kind: 'error', message });
+      setState((prev) =>
+        prev.kind === 'ready'
+          ? { ...prev, refreshing: false, refreshError: message }
+          : { kind: 'error', message },
+      );
     }
   }, []);
 
